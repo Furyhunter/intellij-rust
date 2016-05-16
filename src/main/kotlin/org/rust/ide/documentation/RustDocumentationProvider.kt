@@ -14,10 +14,16 @@ import java.util.*
 class RustDocumentationProvider : AbstractDocumentationProvider() {
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
-        if (element is RustItem) {
-            return element.documentation?.let { formatDoc(element.name ?: "", it) }
+        val docStrings: MutableList<String> = ArrayList()
+        if (element is RustOuterAttributeOwner) {
+            docStrings += element.outerDocumentationLinesForElement
         }
-        return null
+        if (element is RustInnerAttributeOwner) {
+            docStrings += element.innerDocumentationLinesForElement
+        }
+        val name = (element as? RustNamedElement)?.name?:""
+
+        return formatDoc(name, docStrings.joinToString("\n"))
     }
 
     private fun formatDoc(name: String, docString: String): String {
@@ -74,14 +80,14 @@ class RustDocumentationProvider : AbstractDocumentationProvider() {
         get() = containingFile?.let { " [${it.name}]" }.orEmpty()
 }
 
-val RustItem.documentation: String?
-    get() {
-        return (outerDocumentationLinesForElement +
-            innerDocumentationLinesForElement).joinToString("\n")
-    }
+//val RustItem.documentation: String?
+//    get() {
+//        return (outerDocumentationLinesForElement +
+//            innerDocumentationLinesForElement).joinToString("\n")
+//    }
 
 
-private val RustItem.outerDocumentationLinesForElement: List<String>
+private val RustOuterAttributeOwner.outerDocumentationLinesForElement: List<String>
     get() {
         // rustdoc appends the contents of each doc comment and doc attribute in order
         // so we have to resolve these attributes that are edge-bound at the top of the
@@ -106,7 +112,7 @@ private val RustItem.outerDocumentationLinesForElement: List<String>
         return lines
     }
 
-private val RustItem.innerDocumentationLinesForElement: List<String>
+private val RustInnerAttributeOwner.innerDocumentationLinesForElement: List<String>
     get() {
         // Next, we have to consider inner comments and meta. These, like the outer case, are appended in
         // lexical order, after the outer elements. This only applies to functions and modules.
