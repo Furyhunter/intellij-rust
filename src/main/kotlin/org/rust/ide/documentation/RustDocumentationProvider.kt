@@ -9,6 +9,7 @@ import com.intellij.util.text.MarkdownUtil
 import com.petebevin.markdown.MarkdownProcessor
 import org.rust.lang.core.psi.*
 import org.rust.lang.core.psi.impl.mixin.isMut
+import org.rust.lang.core.psi.util.parentOfType
 import java.util.*
 
 class RustDocumentationProvider : AbstractDocumentationProvider() {
@@ -21,18 +22,93 @@ class RustDocumentationProvider : AbstractDocumentationProvider() {
         if (element is RustInnerAttributeOwner) {
             docStrings += element.innerDocumentationLinesForElement
         }
-        val name = (element as? RustNamedElement)?.name?:""
 
-        return formatDoc(name, docStrings.joinToString("\n"))
+        return header(element) + "\n" + formatDoc(docStrings.joinToString("\n"))
     }
 
-    private fun formatDoc(name: String, docString: String): String {
+    private fun formatDoc(docString: String): String {
         val lines = docString.split("\n").toMutableList()
         MarkdownUtil.replaceHeaders(lines)
         MarkdownUtil.replaceCodeBlock(lines)
         val mdp = MarkdownProcessor()
         val md = mdp.markdown(lines.joinToString("\n"))
-        return "<pre>$name</pre>\n$md"
+        return md
+    }
+
+    private fun header(element: PsiElement): String = when (element) {
+        is RustFnItem -> {
+            val vis = element.vis?.let {"pub "}?:""
+            val unsafe = element.unsafe?.let {"unsafe "}?:""
+            val extern = element.externAbi?.text?.let {"$it "}?: ""
+            val name = element.name?:""
+            val params = element.parameters?.text?: ""
+            val type = element.retType?.type?.text?:"()"
+            val where = element.whereClause?.text?.let {" $it"}?:""
+            "<pre>$vis$unsafe${extern}fn <b>$name</b>${element.genericParams.text}$params -> $type$where;</pre>"
+        }
+        is RustConstItem -> {
+            val vis = element.vis?.let {"pub "}?:""
+            val name = element.name?:""
+            val type = element.type.text
+            val value = element.expr?.text?.let{" = $it"}?:""
+            "<pre>${vis}const $name: $type$value;"
+        }
+        is RustStructItem -> {
+            val vis = if (element.vis?.pub?.text == null) "" else "pub "
+            val body: String = when {
+                element.structTupleArgs != null -> {
+                    "(...);"
+                }
+                element.structDeclArgs != null -> {
+                    " {\n&nbsp;&nbsp;&nbsp;&nbsp;...\n}"
+                }
+                else -> ";"
+            }
+            "<pre>${vis}struct <b>${element.name}</b>${element.genericParams.text}$body</pre>"
+        }
+        is RustImplMethodMember -> {
+            val vis = element.vis?.let {"pub "}?:""
+            val unsafe = element.unsafe?.let {"unsafe "}?:""
+            val extern = element.externAbi?.text?.let {"$it "}?: ""
+            val name = element.name?:""
+            val params = element.parameters?.text?: ""
+            val type = element.retType?.type?.text?:"()"
+            val where = element.whereClause?.text?.let {" $it"}?:""
+            "<pre>$vis$unsafe${extern}fn <b>$name</b>${element.genericParams.text}$params -> $type$where;</pre>"
+        }
+        is RustImplConstMember -> {
+            val vis = element.vis?.let {"pub "}?:""
+            val name = element.name?:""
+            val type = element.type.text
+            val value = element.expr?.text?.let{" = $it"}?:""
+            "<pre>${vis}const <b>$name</b>: $type$value;"
+        }
+        is RustTraitItem -> {
+            val vis = if (element.vis?.pub?.text == null) "" else "pub "
+            val unsafe = if (element.unsafe == null) "" else "unsafe "
+
+            "<pre>$vis${unsafe}trait <b>${element.name}</b>;</pre>"
+        }
+        is RustTraitMethodMember -> {
+            val unsafe = element.unsafe?.let {"unsafe "}?:""
+            val extern = element.externAbi?.text?.let {"$it "}?: ""
+            val name = element.name?:""
+            val params = element.parameters?.text?: ""
+            val type = element.retType?.type?.text?:"()"
+            val where = element.whereClause?.text?.let {" $it"}?:""
+            "<pre>$unsafe${extern}fn <b>$name</b>${element.genericParams.text}$params -> $type$where;</pre>"
+        }
+        is RustTraitConstMember -> {
+            val name = element.name?:""
+            val type = element.type?.text?.let {": $it"}?:""
+            val value = element.expr?.text?.let{" = $it"}?:""
+            "<pre>const <b>$name</b>$type$value;"
+        }
+        is RustTraitTypeMember -> {
+            "<pre>type <b>${element.name}</b> <i>from</i> ${element.parentOfType<RustTraitItem>()?.name}</pre>"
+        }
+        is RustNamedElement -> "<pre><b>${element.name}</b></pre>"
+        else -> ""
     }
 
     override fun getQuickNavigateInfo(element: PsiElement, originalElement: PsiElement?) = when (element) {
