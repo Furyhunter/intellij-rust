@@ -5,12 +5,13 @@ import org.rust.ide.icons.RustIcons
 import org.rust.ide.icons.addStaticMark
 import org.rust.lang.core.psi.RustDeclaringElement
 import org.rust.lang.core.psi.RustInnerAttr
+import org.rust.lang.core.psi.RustNamedElement
 import org.rust.lang.core.psi.RustTraitMethodMember
-import org.rust.lang.core.psi.impl.RustCompositeElementImpl
+import org.rust.lang.core.psi.impl.RustNamedElementImpl
 import javax.swing.Icon
 
 
-abstract class RustTraitMethodMemberImplMixin(node: ASTNode) : RustCompositeElementImpl(node)
+abstract class RustTraitMethodMemberImplMixin(node: ASTNode) : RustNamedElementImpl(node)
                                                              , RustTraitMethodMember {
     override val declarations: Collection<RustDeclaringElement> get() {
         val params = parameters ?: return emptyList()
@@ -31,6 +32,8 @@ abstract class RustTraitMethodMemberImplMixin(node: ASTNode) : RustCompositeElem
     val isAbstract: Boolean
         get() = block == null
 
+    override val boundElements: Collection<RustNamedElement>
+        get() = listOf(this)
 }
 
 val RustTraitMethodMember.isStatic: Boolean get() = parameters?.selfArgument == null

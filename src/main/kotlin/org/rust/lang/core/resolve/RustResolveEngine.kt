@@ -5,6 +5,7 @@ import com.intellij.openapi.util.RecursionManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
 import org.rust.cargo.util.AutoInjectedCrates
 import org.rust.cargo.util.crateRoots
@@ -20,6 +21,7 @@ import org.rust.lang.core.psi.impl.mixin.letDeclarationsVisibleAt
 import org.rust.lang.core.psi.impl.mixin.possiblePaths
 import org.rust.lang.core.psi.impl.rustMod
 import org.rust.lang.core.psi.util.module
+import org.rust.lang.core.psi.util.parentOfType
 import org.rust.lang.core.resolve.scope.RustResolveScope
 import org.rust.lang.core.resolve.util.RustResolveUtil
 
@@ -159,6 +161,28 @@ private class Resolver {
             qual != null               -> {
                 val parent = resolve(qual).element
                 when (parent) {
+                    is RustStructItem -> {
+                        val rs: List<RustImplItem> = ReferencesSearch.search(parent).toList().map {
+                            it.element.parentOfType<RustImplItem>(minStartOffset = 2)
+                        }.filter {
+                            if (it != null) {
+                                // TODO real type information
+                                it.type?.text == parent.name
+                            } else false
+                        }.filterNotNull().distinct()
+
+                        // Now we have to decide which ones are trait impls and which are regular impls
+                        val regImpls = rs.filter { it.traitRef == null }
+                        val traitImpls = rs.filter { it.traitRef != null }
+
+                        // Resolve these trait paths.
+                        val traitPathResolved: List<RustTraitItem> = traitImpls.map { it.traitRef!!.path.reference.resolve() as? RustTraitItem }
+                            .filterNotNull()
+                            .distinct()
+                        // Each trait item is a resolve scope to consider.
+                        val resolveScopes = regImpls + (traitPathResolved as Collection<RustResolveScope>) + parent
+                        resolveIn(resolveScopes.asSequence(), by(ref))
+                    }
                     is RustResolveScope -> resolveIn(sequenceOf(parent), by(ref))
                     else                -> RustResolveEngine.ResolveResult.Unresolved
                 }
