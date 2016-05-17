@@ -603,9 +603,9 @@ trait_item ::= UNSAFE? TRAIT IDENTIFIER generic_params type_param_bounds? where_
 trait_body ::= '{' trait_member* '}' { pin = 1 }
 
 // TODO: use upper rules and inheritance here
-private trait_member ::= trait_const_member
-                       | trait_type_member
-                       | trait_method_member
+private trait_member ::= trait_const_member <<bindDocComments>>
+                       | trait_type_member <<bindDocComments>>
+                       | trait_method_member <<bindDocComments>>
 
 trait_const_member ::= outer_attr* CONST IDENTIFIER type_ascription? const_default? ';'
 
