@@ -129,6 +129,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
                     is RustStructItem -> RustStructType(target)
                     is RustEnumItem   -> RustEnumType(target)
                     is RustTypeItem   -> RustTypeAliasType(target)
+                    is RustTypeParam  -> RustParameterizedResolvedType(target)
                     else -> RustUnknownType(manager)
                 }
             }
