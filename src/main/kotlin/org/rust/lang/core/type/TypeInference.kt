@@ -25,14 +25,19 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                     // Unit struct type
                     RustStructType(target)
                 }
+                is RustEnumVariant -> {
+                    // Unit variant of enum type
+                    target.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
+                }
                 else -> RustUnknownType
             }
         }
         is RustStructExpr -> {
             val resolvedElement = path.reference.resolve()
             when (resolvedElement) {
-                is RustStructItem -> RustStructType(resolvedElement)
-                else              -> RustUnknownType
+                is RustStructItem  -> RustStructType(resolvedElement)
+                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
+                else               -> RustUnknownType
             }
         }
         is RustCallExpr -> {
@@ -42,9 +47,10 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                 else            -> null
             }
             when (resolvedElement) {
-                is RustStructItem -> RustStructType(resolvedElement)
-                is RustFnItem     -> resolvedElement.retType?.type?.resolvedType ?: RustUnknownType
-                else              -> RustUnknownType
+                is RustStructItem  -> RustStructType(resolvedElement)
+                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
+                is RustFnItem      -> resolvedElement.retType?.type?.resolvedType ?: RustUnknownType
+                else               -> RustUnknownType
             }
         }
         is RustMethodCallExpr -> {
@@ -75,6 +81,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
             when (target) {
                 is RustStructItem -> RustStructType(target)
                 else -> RustUnknownType
+                is RustEnumItem   -> RustEnumType(target)
             }
         }
         else -> RustUnknownType
