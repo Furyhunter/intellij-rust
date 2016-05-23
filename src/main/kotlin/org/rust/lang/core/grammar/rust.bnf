@@ -144,6 +144,7 @@
     mixin       ("enum_variant") = "org.rust.lang.core.psi.impl.mixin.RustEnumVariantImplMixin"
     mixin       ("impl_method_member") = "org.rust.lang.core.psi.impl.mixin.RustImplMethodMemberImplMixin"
     mixin       ("method_call_expr") = "org.rust.lang.core.psi.impl.mixin.RustMethodCallExprImplMixin"
+    mixin       ("field_expr") = "org.rust.lang.core.psi.impl.mixin.RustFieldExprImplMixin"
 
     //
     // References
@@ -539,7 +540,8 @@ foreign_fn_decl ::= attrs_and_vis FN IDENTIFIER generic_params foreign_fn_parame
   pin = "FN"
   hooks = [ leftBinder = "DOC_COMMENT_BINDER" ]
   implements = [ "org.rust.lang.core.psi.RustOuterAttributeOwner"
-                 "org.rust.lang.core.psi.RustVisibilityOwner" ]
+                 "org.rust.lang.core.psi.RustVisibilityOwner"
+                 "org.rust.lang.core.psi.RustNamedElement" ]
 }
 
 

@@ -60,18 +60,23 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             }
         }
         is RustMethodCallExpr -> {
-            val m = reference?.resolve()
-            when (m) {
-                is RustImplMethodMember  -> m.retType?.type?.resolvedType ?: RustUnknownType
-                is RustTraitMethodMember -> m.retType?.type?.resolvedType ?: RustUnknownType
-                else -> RustUnknownType
-            }
+            val e = expr
+            val eType = e.inferredType
+            eType.nonStaticMethods.find { it.name == identifier?.text }?.retType?.type?.resolvedType ?: RustUnknownType
         }
         is RustParenExpr -> {
             expr?.inferredType ?: RustUnknownType
         }
         is RustBlockExpr -> {
             block?.expr?.inferredType ?: RustUnknownType
+        }
+        is RustFieldExpr -> {
+            val e = expr
+            val eType = e.inferredType
+            when (eType) {
+                is RustStructType -> eType.fields.find { it.name == identifier?.text }?.type?.resolvedType ?: RustUnknownType(manager)
+                else -> RustUnknownType(manager)
+            }
         }
         is RustTupleExpr -> {
             RustTupleResolvedType(exprList.map { it.inferredType }, manager)

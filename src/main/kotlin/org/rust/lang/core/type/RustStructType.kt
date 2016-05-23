@@ -1,8 +1,6 @@
 package org.rust.lang.core.type
 
-import org.rust.lang.core.psi.RustImplItem
-import org.rust.lang.core.psi.RustMod
-import org.rust.lang.core.psi.RustStructItem
+import org.rust.lang.core.psi.*
 import org.rust.lang.core.psi.util.parentOfType
 
 data class RustStructType(val struct: RustStructItem) : RustResolvedType {
@@ -11,6 +9,11 @@ data class RustStructType(val struct: RustStructItem) : RustResolvedType {
             .filterIsInstance<RustImplItem>()
             .filter { it.traitRef == null && (it.type?.resolvedType == this) }
     }
+
+    val fields: Collection<RustStructDeclField>
+        get() {
+            return struct.structDeclArgs?.structDeclFieldList ?: emptyList()
+        }
 
     override fun toString(): String = "<struct type $struct>"
 
