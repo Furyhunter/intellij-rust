@@ -76,19 +76,61 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
         is RustTupleExpr -> {
             RustTupleResolvedType(exprList.map { it.inferredType }, manager)
         }
+        is RustLitExpr -> {
+            val inferredName = when {
+                integerLiteral != null                 -> integerLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "i32"
+                floatLiteral   != null                 -> floatLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "f64"
+                charLiteral != null                    -> "char"
+                byteLiteral != null                    -> "u8"
+                `true` != null || `false` != null      -> "bool"
+                stringLiteral != null                  -> "str" // special case; it's &'static str
+                else                                   -> null
+            }
+            if (inferredName != null) RustPrimitiveResolvedType(inferredName, manager)
+            else                      RustUnknownType
+        }
         else -> RustUnknownType
     }
 }
 
+private val integerLiteralNames: List<String> = listOf(
+    "isize",
+    "usize",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "u8",
+    "u16",
+    "u32",
+    "u64"
+)
+
+private val floatLiteralNames: List<String> = listOf(
+    "f32",
+    "f64"
+)
+
+private val literalNames: List<String> = integerLiteralNames + floatLiteralNames + listOf(
+    "bool",
+    "char",
+    "str"
+)
+
 val RustType.resolvedType: RustResolvedType by psiCached {
     when (this) {
         is RustPathType -> {
-            val target = path?.reference?.resolve()
-            when (target) {
-                is RustStructItem -> RustStructType(target)
-                is RustEnumItem   -> RustEnumType(target)
-                is RustTypeItem   -> RustTypeAliasType(target)
-                else -> RustUnknownType
+            val p = path
+            if (p?.text?.let { literalNames.contains(it) } ?: false) {
+                p?.text?.let { RustPrimitiveResolvedType(it, manager) } ?: RustUnknownType
+            } else {
+                val target = p?.reference?.resolve()
+                when (target) {
+                    is RustStructItem -> RustStructType(target)
+                    is RustEnumItem   -> RustEnumType(target)
+                    is RustTypeItem   -> RustTypeAliasType(target)
+                    else -> RustUnknownType(manager)
+                }
             }
         }
         is RustTupleType -> RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
