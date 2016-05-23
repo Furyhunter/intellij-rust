@@ -73,6 +73,9 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
         is RustBlockExpr -> {
             block?.expr?.inferredType ?: RustUnknownType
         }
+        is RustTupleExpr -> {
+            RustTupleResolvedType(exprList.map { it.inferredType }, manager)
+        }
         else -> RustUnknownType
     }
 }
@@ -88,6 +91,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
                 else -> RustUnknownType
             }
         }
+        is RustTupleType -> RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
         else -> RustUnknownType
     }
 }
