@@ -29,6 +29,10 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                     // Unit variant of enum type
                     target.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
                 }
+                is RustTypeItem -> {
+                    // Aliased type w/ unit constructor expression
+                    RustTypeAliasType(target)
+                }
                 else -> RustUnknownType
             }
         }
@@ -36,7 +40,8 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             val resolvedElement = path.reference.resolve()
             when (resolvedElement) {
                 is RustStructItem  -> RustStructType(resolvedElement)
-                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
+                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType(manager)
+                is RustTypeItem    -> RustTypeAliasType(resolvedElement)
                 else               -> RustUnknownType
             }
         }
@@ -50,6 +55,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                 is RustStructItem  -> RustStructType(resolvedElement)
                 is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
                 is RustFnItem      -> resolvedElement.retType?.type?.resolvedType ?: RustUnknownType
+                is RustTypeItem    -> RustTypeAliasType(resolvedElement)
                 else               -> RustUnknownType
             }
         }
@@ -66,9 +72,6 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
         }
         is RustBlockExpr -> {
             block?.expr?.inferredType ?: RustUnknownType
-                is RustSelfArgument -> target.parentOfType<RustImplItem>()?.type?.resolvedType ?: RustUnknownType
-                else -> RustUnknownType
-            }
         }
         else -> RustUnknownType
     }
@@ -80,8 +83,9 @@ val RustType.resolvedType: RustResolvedType by psiCached {
             val target = path?.reference?.resolve()
             when (target) {
                 is RustStructItem -> RustStructType(target)
-                else -> RustUnknownType
                 is RustEnumItem   -> RustEnumType(target)
+                is RustTypeItem   -> RustTypeAliasType(target)
+                else -> RustUnknownType
             }
         }
         else -> RustUnknownType
