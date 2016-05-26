@@ -14,8 +14,8 @@ class TypeCheckInspection : RustLocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : RustVisitor() {
             override fun visitFnItem(o: RustFnItem) {
-                val blockType = o.block?.expr?.inferredType ?: RustUnknownType(o.manager)
-                val retType = o.retType?.type?.resolvedType ?: RustUnknownType(o.manager)
+                val blockType = o.block?.expr?.inferredType ?: RustUnknownType
+                val retType = o.retType?.type?.resolvedType ?: RustUnknownType
                 if (blockType !is RustUnknownType && retType !is RustUnknownType && blockType != retType) {
                     holder.registerProblem(o.block?.expr!!, "Expected type $retType, got $blockType")
                 }

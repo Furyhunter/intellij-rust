@@ -40,7 +40,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             val resolvedElement = path.reference.resolve()
             when (resolvedElement) {
                 is RustStructItem  -> RustStructType(resolvedElement)
-                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType(manager)
+                is RustEnumVariant -> resolvedElement.parentOfType<RustEnumItem>()?.let { RustEnumType(it) } ?: RustUnknownType
                 is RustTypeItem    -> RustTypeAliasType(resolvedElement)
                 else               -> RustUnknownType
             }
@@ -65,7 +65,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             eType.nonStaticMethods.find { it.name == identifier?.text }?.retType?.type?.resolvedType ?: RustUnknownType
         }
         is RustParenExpr -> {
-            expr?.inferredType ?: RustUnknownType
+            expr.inferredType
         }
         is RustBlockExpr -> {
             block?.expr?.inferredType ?: RustUnknownType
@@ -74,8 +74,8 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             val e = expr
             val eType = e.inferredType
             when (eType) {
-                is RustStructType -> eType.fields.find { it.name == identifier?.text }?.type?.resolvedType ?: RustUnknownType(manager)
-                else -> RustUnknownType(manager)
+                is RustStructType -> eType.fields.find { it.name == identifier?.text }?.type?.resolvedType ?: RustUnknownType
+                else -> RustUnknownType
             }
         }
         is RustTupleExpr -> {
@@ -135,7 +135,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
                     is RustEnumItem   -> RustEnumType(target)
                     is RustTypeItem   -> RustTypeAliasType(target)
                     is RustTypeParam  -> RustParameterizedResolvedType(target)
-                    else -> RustUnknownType(manager)
+                    else -> RustUnknownType
                 }
             }
         }
