@@ -4,6 +4,8 @@ class RustTypeResolveTestCase : RustResolveTestCaseBase() {
     override val dataPath = "org/rust/lang/core/resolve/fixtures/type"
 
     fun testMethod() = checkIsBound(atOffset = 27)
+    fun testRefSelf() = checkIsBound()
+    fun testRefMutSelf() = checkIsBound()
     fun testLetBinding() = checkIsBound()
     fun testLetBindingAscripted() = checkIsBound()
     fun testParenExpression() = checkIsBound()
@@ -11,6 +13,10 @@ class RustTypeResolveTestCase : RustResolveTestCaseBase() {
     fun testCallExpression() = checkIsBound()
     fun testFieldExpression() = checkIsBound()
     fun testTypeAlias() = checkIsBound()
+
+    fun testRefArg() = checkIsBound()
+
+    fun testUnaryRef() = checkIsBound()
 
     fun testUnitStructExpression() = checkIsBound()
     fun testTupleStructExpression() = checkIsBound()

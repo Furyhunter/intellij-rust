@@ -11,7 +11,12 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             when (target) {
                 is RustSelfArgument -> {
                     val impl = target.parentOfType<RustImplItem>()
-                    impl?.type?.resolvedType ?: RustUnknownType
+                    val type = impl?.type?.resolvedType ?: RustUnknownType
+                    when {
+                        type is RustUnknownType -> type
+                        target.and != null      -> RustRefResolvedType(true, target.mut != null, type)
+                        else                    -> type
+                    }
                 }
                 is RustPatBinding -> {
                     val targetParent = target.parent
@@ -33,6 +38,8 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                     // Aliased type w/ unit constructor expression
                     RustTypeAliasType(target)
                 }
+                is RustConstItem  -> target.type.resolvedType
+                is RustStaticItem -> target.type.resolvedType
                 else -> RustUnknownType
             }
         }
@@ -81,15 +88,23 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
         is RustTupleExpr -> {
             RustTupleResolvedType(exprList.map { it.inferredType }, manager)
         }
+        is RustUnaryExpr -> {
+            // Depends on the operator being used.
+            // Will have to also look at the traits that implement unary operations and see what types they yield.
+            when {
+                and != null -> RustRefResolvedType(true, mut != null, expr?.inferredType ?: RustUnknownType)
+                else        -> RustUnknownType
+            }
+        }
         is RustLitExpr -> {
             val inferredName = when {
-                integerLiteral != null                 -> integerLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "i32"
-                floatLiteral   != null                 -> floatLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "f64"
-                charLiteral != null                    -> "char"
-                byteLiteral != null                    -> "u8"
-                `true` != null || `false` != null      -> "bool"
-                stringLiteral != null                  -> "str" // special case; it's &'static str
-                else                                   -> null
+                integerLiteral != null            -> integerLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "i32"
+                floatLiteral   != null            -> floatLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "f64"
+                charLiteral != null               -> "char"
+                byteLiteral != null               -> "u8"
+                `true` != null || `false` != null -> "bool"
+                stringLiteral != null             -> "str" // special case; it's &'static str
+                else                              -> null
             }
             if (inferredName != null) RustPrimitiveResolvedType(inferredName, manager)
             else                      RustUnknownType
@@ -139,6 +154,8 @@ val RustType.resolvedType: RustResolvedType by psiCached {
                 }
             }
         }
+        is RustRefType   -> RustRefResolvedType(and != null, mut != null, type?.resolvedType ?: RustUnknownType)
+        is RustPtrType   -> RustPtrResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
         is RustTupleType -> RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
         else -> RustUnknownType
     }
