@@ -14,7 +14,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                     val type = impl?.type?.resolvedType ?: RustUnknownType
                     when {
                         type is RustUnknownType -> type
-                        target.and != null      -> RustRefResolvedType(true, target.mut != null, type)
+                        target.and != null      -> RustRefResolvedType(target.mut != null, type)
                         else                    -> type
                     }
                 }
@@ -92,7 +92,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             // Depends on the operator being used.
             // Will have to also look at the traits that implement unary operations and see what types they yield.
             when {
-                and != null -> RustRefResolvedType(true, mut != null, expr?.inferredType ?: RustUnknownType)
+                and != null -> RustRefResolvedType(mut != null, expr?.inferredType ?: RustUnknownType)
                 else        -> RustUnknownType
             }
         }
@@ -154,7 +154,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
                 }
             }
         }
-        is RustRefType   -> RustRefResolvedType(and != null, mut != null, type?.resolvedType ?: RustUnknownType)
+        is RustRefType   -> RustRefResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
         is RustPtrType   -> RustPtrResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
         is RustTupleType -> RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
         else -> RustUnknownType
