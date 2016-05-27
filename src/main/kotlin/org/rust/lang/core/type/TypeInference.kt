@@ -156,7 +156,10 @@ val RustType.resolvedType: RustResolvedType by psiCached {
         }
         is RustRefType   -> RustRefResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
         is RustPtrType   -> RustPtrResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
-        is RustTupleType -> RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
+        is RustTupleType -> {
+            if (typeList.isEmpty()) RustUnitResolvedType
+            else                    RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
+        }
         else -> RustUnknownType
     }
 }
