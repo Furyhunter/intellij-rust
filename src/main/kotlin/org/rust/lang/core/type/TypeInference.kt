@@ -86,7 +86,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             }
         }
         is RustTupleExpr -> {
-            RustTupleResolvedType(exprList.map { it.inferredType }, manager)
+            RustTupleResolvedType(exprList.map { it.inferredType })
         }
         is RustUnaryExpr -> {
             // Depends on the operator being used.
@@ -158,7 +158,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
         is RustPtrType   -> RustPtrResolvedType(mut != null, type?.resolvedType ?: RustUnknownType)
         is RustTupleType -> {
             if (typeList.isEmpty()) RustUnitResolvedType
-            else                    RustTupleResolvedType(typeList.map { it.resolvedType }, manager)
+            else                    RustTupleResolvedType(typeList.map { it.resolvedType })
         }
         else -> RustUnknownType
     }
