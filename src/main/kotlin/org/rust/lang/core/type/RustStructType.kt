@@ -20,4 +20,5 @@ data class RustStructType(val struct: RustStructItem) : RustResolvedType {
 
     override fun toString(): String = "<struct type $struct>"
 
+    override val name: String = struct.name ?: ""
 }

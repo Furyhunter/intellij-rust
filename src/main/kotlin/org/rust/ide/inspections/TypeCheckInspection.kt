@@ -22,8 +22,8 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                     o.block == null -> {}
                     retType is RustUnitResolvedType -> {} // do nothing, the expression type doesn't actually matter
                     retType is RustUnknownType -> {} // do nothing, we can't check it
-                    o.block?.expr == null -> holder.registerProblem(o.block!!, "Expected type $retType, got $blockType", ProblemHighlightType.GENERIC_ERROR)
-                    blockType != retType -> holder.registerProblem(o.block?.expr!!, "Expected type $retType, got $blockType", ProblemHighlightType.GENERIC_ERROR)
+                    o.block?.expr == null -> holder.registerProblem(o.block!!, "Expected type ${retType.name}, got ${blockType.name}", ProblemHighlightType.GENERIC_ERROR)
+                    blockType != retType -> holder.registerProblem(o.block?.expr!!, "Expected type ${retType.name}, got ${blockType.name}", ProblemHighlightType.GENERIC_ERROR)
                 }
             }
 
@@ -36,19 +36,19 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                         val retType = fnParent.retType?.type?.resolvedType ?: RustUnitResolvedType
                         val exprType = o.expr?.inferredType ?: RustUnitResolvedType
                         if (retType !is RustUnknownType && exprType !is RustUnknownType && retType != exprType)
-                            holder.registerProblem(o, "Expected type $retType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                            holder.registerProblem(o, "Expected type ${retType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
                     }
                     implParent != null -> {
                         val retType = implParent.retType?.type?.resolvedType ?: RustUnitResolvedType
                         val exprType = o.expr?.inferredType ?: RustUnitResolvedType
                         if (retType !is RustUnknownType && exprType !is RustUnknownType && retType != exprType)
-                            holder.registerProblem(o, "Expected type $retType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                            holder.registerProblem(o, "Expected type ${retType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
                     }
                     traitParent != null -> {
                         val retType = traitParent.retType?.type?.resolvedType ?: RustUnitResolvedType
                         val exprType = o.expr?.inferredType ?: RustUnitResolvedType
                         if (retType !is RustUnknownType && exprType !is RustUnknownType && retType != exprType)
-                            holder.registerProblem(o, "Expected type $retType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                            holder.registerProblem(o, "Expected type ${retType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
                     }
                 }
             }
@@ -57,7 +57,7 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                 val exprType = o.expr?.inferredType ?: RustUnknownType
                 val ascriptedType = o.type?.resolvedType
                 if (ascriptedType != null && ascriptedType !is RustUnknownType && exprType !is RustUnknownType && ascriptedType != exprType) {
-                    holder.registerProblem(o.expr ?: o, "Expected type $ascriptedType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                    holder.registerProblem(o.expr ?: o, "Expected type ${ascriptedType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
                 }
             }
 
@@ -65,14 +65,14 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                 val constType = o.type.resolvedType
                 val exprType = o.expr.inferredType
                 if (constType !is RustUnknownType && exprType !is RustUnknownType && constType != exprType)
-                    holder.registerProblem(o.expr, "Expected type $constType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                    holder.registerProblem(o.expr, "Expected type ${constType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
             }
 
             override fun visitStaticItem(o: RustStaticItem) {
                 val staticType = o.type.resolvedType
                 val exprType = o.expr.inferredType
                 if (staticType !is RustUnknownType && exprType !is RustUnknownType && staticType != exprType)
-                    holder.registerProblem(o.expr, "Expected type $staticType, got $exprType", ProblemHighlightType.GENERIC_ERROR)
+                    holder.registerProblem(o.expr, "Expected type ${staticType.name}, got ${exprType.name}", ProblemHighlightType.GENERIC_ERROR)
             }
 
             override fun visitCallExpr(o: RustCallExpr) {
@@ -87,7 +87,7 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                         val paramTypes = refFn.parameters?.parameterList?.map { it.type?.resolvedType }.orEmpty()
                         for ((a, p) in argTypes.zip(paramTypes)) {
                             if (a !is RustUnknownType && p !is RustUnknownType && a != p) {
-                                holder.registerProblem(o, "Expected type $p arguments, got $a", ProblemHighlightType.GENERIC_ERROR)
+                                holder.registerProblem(o, "Expected type ${p?.name} argument, got ${a.name}", ProblemHighlightType.GENERIC_ERROR)
                             }
                         }
                     }

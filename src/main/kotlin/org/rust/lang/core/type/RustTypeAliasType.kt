@@ -18,4 +18,6 @@ data class RustTypeAliasType(val alias: RustTypeItem) : RustResolvedType {
 
     val typeReference: RustReference?
         get() = (alias.type as? RustPathType)?.path?.reference
+
+    override val name: String = alias.name ?: ""
 }

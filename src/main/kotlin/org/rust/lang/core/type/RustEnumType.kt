@@ -13,4 +13,6 @@ data class RustEnumType(val enum: RustEnumItem) : RustResolvedType {
                 impl.traitRef == null && (impl.type?.resolvedType == this)
             }
         }
+
+    override val name: String = enum.name ?: ""
 }

@@ -9,4 +9,6 @@ data class RustTupleResolvedType(val types: List<RustResolvedType>) : RustResolv
 
     val arity: Int
         get() = types.size
+
+    override val name: String = "(${types.map {it.name}.joinToString()})"
 }

@@ -106,7 +106,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                 stringLiteral != null             -> "str" // special case; it's &'static str
                 else                              -> null
             }
-            if (inferredName != null) RustPrimitiveResolvedType(inferredName, manager)
+            if (inferredName != null) RustPrimitiveResolvedType(inferredName)
             else                      RustUnknownType
         }
         else -> RustUnknownType
@@ -142,7 +142,7 @@ val RustType.resolvedType: RustResolvedType by psiCached {
         is RustPathType -> {
             val p = path
             if (p?.text?.let { literalNames.contains(it) } ?: false) {
-                p?.text?.let { RustPrimitiveResolvedType(it, manager) } ?: RustUnknownType
+                p?.text?.let { RustPrimitiveResolvedType(it) } ?: RustUnknownType
             } else {
                 val target = p?.reference?.resolve()
                 when (target) {
