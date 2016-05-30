@@ -96,6 +96,7 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
                 else        -> RustUnknownType
             }
         }
+        is RustCastExpr -> type.resolvedType
         is RustLitExpr -> {
             val inferredName = when {
                 integerLiteral != null            -> integerLiteralNames.mapNotNull { if (text.endsWith(it)) it else null }.firstOrNull() ?: "i32"
