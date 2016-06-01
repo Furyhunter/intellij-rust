@@ -93,6 +93,21 @@ class TypeCheckInspection : RustLocalInspectionTool() {
                     }
                 }
             }
+
+            override fun visitMatchExpr(o: RustMatchExpr) {
+                // Check that all the arms' types match the first one
+                val firstArm = o.matchBody.matchArmList.firstOrNull()
+                if (firstArm != null) {
+                    val firstExprType = firstArm.expr.inferredType
+                    if (firstExprType is RustUnknownType) return
+                    val types = o.matchBody.matchArmList.map { Pair(it, it.expr.inferredType) }
+                    for ((expr, type) in types) {
+                        if (type !is RustUnknownType && type != firstExprType) {
+                            holder.registerProblem(expr, "Match arm expression's type ${type.name} does not match expected type ${firstExprType.name}", ProblemHighlightType.GENERIC_ERROR)
+                        }
+                    }
+                }
+            }
         }
     }
 }

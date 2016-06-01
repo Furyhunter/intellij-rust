@@ -110,6 +110,12 @@ val RustExpr.inferredType: RustResolvedType by psiCached {
             if (inferredName != null) RustPrimitiveResolvedType(inferredName)
             else                      RustUnknownType
         }
+        is RustMatchExpr -> {
+            // The type is going to be the type of the first expression.
+            // It should be the lowest type bound of all the arms but this approximation is fine.
+            val firstArm = this.matchBody.matchArmList.firstOrNull()
+            if (firstArm != null) firstArm.expr.inferredType else RustUnknownType
+        }
         else -> RustUnknownType
     }
 }
