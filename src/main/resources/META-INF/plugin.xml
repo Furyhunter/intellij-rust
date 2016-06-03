@@ -121,6 +121,9 @@
         <localInspection language="RUST" enabledByDefault="false" level="ERROR"
                          implementationClass="org.rust.ide.inspections.RustUnresolvedReferenceInspection"/>
 
+        <localInspection language="RUST" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.rust.ide.inspections.TypeCheckInspection"/>
+
         <!-- Surrounder -->
         <lang.surroundDescriptor language="RUST"
                                  implementationClass="org.rust.ide.surround.RustSurroundDescriptor"/>

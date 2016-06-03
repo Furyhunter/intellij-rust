@@ -21,4 +21,5 @@ interface RustResolvedType {
     val nonStaticMethods: Collection<RustImplMethodMember>
         get() = allMethods.filter { !it.isStatic }
 
+    val name: String
 }
